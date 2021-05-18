@@ -301,7 +301,7 @@ LIMIT 3);
 
 -- ************		Module 1: Retreiving data from MULTIPLE Tables	*****************ALTER
 
--- 11	** NEW TOPIC: Inner Joins within the DATABASE
+-- 11	** NEW TOPIC: INNER JOINS WITHIN THE DATABASE
 
 -- Above, we've seen how to retrieve specific data from single table BUT in the real world, we often collect data from multiple tables
 
@@ -434,4 +434,72 @@ FROM
     ON oi.order_id = oin.order_id
         AND oi.product_id = oin.product_id);
         
-        -- Here in, since there is composite primary key, thus, there are multiple conditions to JOIN the tables too
+        -- Here in, since there is composite primary key, thus, coz of that, there are multiple conditions to JOIN the tables too
+        
+                -- 16	** NEW TOPIC: IMPLICIT JOIN SYNTAX:
+                -- This is another way to retrieve data from multiple table:- without 'JOIN' ing the tables:
+                
+--              SELECT *
+--                 from orders o
+--                 join customers c
+--                 on o.customer_id = c.customer_id 
+                (
+                SELECT *
+				from orders o, customers c					-- Selecting multiple tables
+                 where o.customer_id = c.customer_id);		-- 'Where' clause, followed by the condition
+                
+                -- DESPITE being an easy syntax to read (when compared to the 'JOIN'), this is still best avoided because, if we dont put the 'where' clause or forget to put it, this still works but leads to a problematic situation of CROSS JOIN i.e. each record of one table would be joining to all the records of another table, thus leading to wrong data results. 
+                -- BUT if we use the 'JOIN' method i.e. EXPLICIT syntax, we use the keyword 'JOIN' and then have to state 'ON' wherein we can be a little more carefull of how we state the conditions, thus helping us be more vigilant and careful and better resluts. 
+                
+                
+                
+-- 17	** NEW TOPIC: OUTER JOINS:
+ 
+ -- So far we've seen INNER JOIN and we learnt that , when 'JOIN' is being used without any mention of 'inner' or 'outer', it will be treatd as 'INNER' JOIN by default.
+
+ 
+ (SELECT 
+ c.customer_id,
+ c.first_name,
+ o.order_id 
+ FROM customers c
+JOIN orders o
+ ON c.customer_id = o.customer_id
+ ORDER BY c.customer_id
+);
+
+ -- WHY do we need to 'OUTER JOIN' ? 
+ -- Inner join aka join would only return the results or records which qualify for the eligibility mentioned in the 'ON' condition. If there are options where a customer has not ordered anything, that will not be included in the results because the entry woudnt have been able to qualify for the 'ON' condition c.customer_id = o.customer_id. (i.e the customer because they havent ordered anything would NOT have any mention in the table 'orders', and hence, would be missing appearing in the results too )
+ 
+ -- BUT what 'OUTER JOIN' would do is that it helps you specify the conditions in a better way. Through its 2 variants, LEFT or RIGHT, we can specify which table we'd like to kind of treat primary.
+ 
+  (SELECT 
+ c.customer_id,
+ c.first_name,
+ o.order_id 
+ FROM customers c
+ LEFT  JOIN orders o						-- NOTE the usage of 'LEFT' outer JOIN. All the record values in the customer_id gets accounted for, even when they wouldnt have ordered anything ever. Similary, if we mention 'RIGHT' then, the table 'order' and all the values there in the customer_id would be treated as primary and the final result would show filtered accordingly.
+ 
+ ON c.customer_id = o.customer_id
+ ORDER BY c.customer_id
+);
+
+
+-- EXERCISE:
+-- Write a query that produces this result: JOINS products table with order_items table, so we can see how many times each product has been ordered
+
+-- If we do an INNER join, we only would get to see the products that have been ordered, NOT how many times
+
+(SELECT 
+p.product_id,
+p.name,
+oi.quantity
+FROM PRODUCTS p
+LEFT JOIN order_items oi				-- All the records aka rows from the table 'products' would be specifically get a mention 
+ON p.product_id = oi.product_id);
+
+-- All the records aka rows from the table 'products' would be specifically get a mention 
+-- If you just do INNER join aka join, Only the records which would have a corresponding appearence in the table 'order_items', would appear. So per the above example, INNER JOIN WOULD MISS 'SWEET PEA SPROUTS', BECAUSE IT HAS NEVER BEEN ORDERED, hence it doesnt get any mention in 'order_items' table.
+
+
+-- 18	** NEW TOPIC: OUTER JOIN BETWEEN MULTIPLE TABLES:
