@@ -3,6 +3,20 @@ USE sql_store;  -- Choosing the dataBase to work with
 
 -- ************		Module 1: Retreiving data from a SINGLE Table	*****************
 
+-- TOPICS:
+		-- 1.	The SELECT statement/ clause
+        -- 2.	The Where clause
+        -- 3.	The AND, OR and NOT operators
+        -- 4.	The IN Operator
+        -- 5. 	The Between Operator
+        -- 6.	The LIKE Operator
+        -- 7.	The REGEXP Operator
+        -- 8.	The IS NULL Operator
+        -- 9.	The Order BY clause
+        -- 10.	The LIMIT clause
+        
+        
+
 -- 1 ** NEW TOPIC: SELECT statement or clause 
 (SELECT 
     customer_id,
@@ -33,7 +47,7 @@ FROM
 WHERE
     -- points > 3000
     -- and state = 'tx'
-    -- Here above, we also see the and clause being used
+    -- Here above, we also see the 'and' conditions being used
 -- state ='tx' could also have been 'TX' and would ve given the same result. This means the search criteria is not case sensitive. 
 -- state != 'tx' would bring the ALL the results which dont have a state value as 'tx'. EITHER USE != OR <> 
 
@@ -299,7 +313,23 @@ ORDER BY points DESC
 LIMIT 3); 
 
 
--- ************		Module 1: Retreiving data from MULTIPLE Tables	*****************ALTER
+-- ************		Module 2: Retreiving data from MULTIPLE Tables	*****************ALTER
+
+
+-- TOPICS:
+		-- 11.	The INNER JOINs
+        -- 12.	Joining across databases
+        -- 13.	SELF JOINs
+        -- 14.	JOINING Multiple Tables
+        -- 15. 	Compound JOINING Conditions
+        -- 16.	Implicit JOIN syntax
+        -- 17.	Outer JOINs
+        -- 18.	Outer JOIN between MULTIPLE tables
+        -- 19.	Self OUTER JOINs
+        -- 20.	The USING clause
+        -- 21.	NATURAL JOINs
+        -- 22.	CROSS JOINs
+        -- 23.	UNIONs
 
 -- 11	** NEW TOPIC: INNER JOINS WITHIN THE DATABASE
 
@@ -495,11 +525,241 @@ p.product_id,
 p.name,
 oi.quantity
 FROM PRODUCTS p
-LEFT JOIN order_items oi				-- All the records aka rows from the table 'products' would be specifically get a mention 
+LEFT JOIN order_items oi				-- All the records aka rows from the table 'products' would specifically get a mention 
 ON p.product_id = oi.product_id);
 
--- All the records aka rows from the table 'products' would be specifically get a mention 
+-- All the records aka rows from the table 'products' would specifically get a mention 
 -- If you just do INNER join aka join, Only the records which would have a corresponding appearence in the table 'order_items', would appear. So per the above example, INNER JOIN WOULD MISS 'SWEET PEA SPROUTS', BECAUSE IT HAS NEVER BEEN ORDERED, hence it doesnt get any mention in 'order_items' table.
 
 
 -- 18	** NEW TOPIC: OUTER JOIN BETWEEN MULTIPLE TABLES:
+
+ (SELECT 
+ c.customer_id,
+ c.first_name,
+ o.shipper_id,
+ sh.name as shipper
+ FROM customers c
+ LEFT JOIN orders o
+ ON c.customer_id = o.customer_id
+ LEFT JOIN shippers as sh
+ on o.shipper_id = sh.shipper_id
+ );
+ 
+  -- As a good practice, use 'LEFT' JOIN rather than using a mix of LEFT and RIGHT JOINS 
+ 
+ -- EXERCISE:
+ -- JOIN the tables to give: order_date, order_id, first_name, shipper, status:
+ 
+( SELECT 
+    ord.order_date,
+    ord.order_id,
+    cus.first_name,
+    sh.shipper_id,
+    sh.name,
+    ordsta.name
+FROM
+    orders AS ord
+        LEFT JOIN customers cus 
+    ON ord.customer_id = cus.customer_id
+        LEFT JOIN shippers AS sh 
+    ON ord.shipper_id = sh.shipper_id
+        LEFT JOIN order_statuses AS ordsta 
+    ON ord.status = ordsta.order_status_id
+    order by ordsta.name);
+ 
+-- 19	** NEW TOPIC: SELF OUTER JOINS
+
+USE sql_hr;
+(SELECT 
+e.employee_id,
+e.first_name,
+e.last_name,
+m.first_name as manager 
+FROM employees as e
+-- JOIN employees as m
+LEFT JOIN  employees as m
+ON e.reports_to = m.employee_id);
+
+-- We've covered this example before at the time we were discussing 'SELF INNER JOIN'. the problem with this result output, is that though all the employee's manager info rightly shows as 'manager YOVONNDA',; there is NO entry for the manager itself, even though he is part of the same group.
+-- This wholesome result which includes info on manager himself, is only possible through Outer Self JOIN 
+
+-- 20	** NEW TOPIC: The 'USING' CLAUSE:
+
+-- The 'USING' clause provides a simpler and cleaner syntax to replace the 'ON' condition clause
+-- The 'USING' clause can ONLY be used when both the column names from the joined tables are the SAME.
+-- IF the names are different, then keep using 'ON' clause.
+
+USE sql_store;
+(SELECT 
+    o.order_id,
+    c.customer_id,
+    c.first_name,
+    sh.name
+FROM
+    orders o
+		JOIN
+    customers c 
+    -- ON o.customer_id = c.customer_id);			-- This query can be re-written as below, BUT only when the column names are the same in both the tables:
+        USING (customer_id)
+        
+    left  JOIN shippers sh
+        USING  (shipper_id));		-- Again, this can only be used because column header 'shipper_id' is common in tables "shippers" and "orders". Had it been different, we would have had to use the 'ON' clause.
+        
+    (SELECT *
+	FROM order_items oi
+	JOIN order_item_notes oin 
+    ON oi.order_id = oin.order_id
+	AND oi.product_id = oin.product_id );
+    
+    -- As we know, When there are composite primary keys being used in a table, we have to use the 'AND' clause and write the query as above. 
+    -- But the same can also be better written with 'USING' clause as:
+    (SELECT *
+    FROM order_items oi
+    JOIN order_item_notes oin
+    USING(order_id, product_id)
+    );
+    
+     -- EXERCISE:
+     -- From the sql_invoicing database, Write a query to select payment from the payments table, to show: date; client; Amount; name payment method 
+    
+    USE sql_invoicing;
+    
+    (SELECT 
+    p.date,
+    c.name as client,
+    p.amount,
+    pm.name
+    FROM clients c
+    LEFT JOIN payments p
+    USING(client_id)				-- Since both 'joined' tables have the same column name, hence clause 'USING' used.
+    JOIN payment_methods pm
+    ON p.payment_method = pm.payment_method_id) ;	-- Since both the joined tables have different column headers; hence clause "ON" used
+    
+    
+    -- 21	** NEW TOPIC: The 'NATURAL JOINS':
+    
+    -- By 'Natural Joins',  you let the database management system decide how it should combine the two tables without explicitely stating the columns common to both of them. BUT THIS CAN LEAD TO ERROR, Hence should not be encouraged despite looking much ,ore simpler.
+    
+    -- E.g. 
+   ( SELECT *
+    FROM clients 
+    NATURAL JOIN payments);
+    
+    -- The above looks cleaner in terms of syntax and the system hereby takes a decision by itself on how to combine different tables through common columns. Though this looks easy but should be best AVOIDED as it leaves the query maker, with very little or NO controlover how to join two different tables.
+    
+    
+    
+    -- 22	** NEW TOPIC: The 'CROSS JOINS':
+    
+    -- We use 'CROSS' Joins to connect every record from the first table to EVERY record in the second table. e.g.
+    -- Unlike other 'JOIN' conditions discussed so far, CROSS JOIN doesnt have a 'ON' or 'USING' condition. That is because those conditions are stated to ensure each reacord from one table syncs with only a matching similar record from the other table. But in here, since we explicitely would want to 'CROSS' JOIN the tables, no such condition statements are required.
+    USE sql_store; 
+    (
+    SELECT *
+    FROM customers c
+    CROSS JOIN products p
+    );
+    -- ANOTHER SYNTAX could be:
+    (
+    SELECT *
+    FROM customers c, products p		-- Implicit syntax where we dont specify CROSS JOIN but produces the same result. But the explicit method above is preffered as its more clear. 
+    );
+    
+    -- GOOD RELEVANT USE case for using 'CROSS' JOIN could be when you have one table comprising of SIZES of a shirt say smmall, Medium, large, x-large and then have another table comprising of different colors. 
+    -- In such a scenario, it makes sense to use CROSS JOIN because it can help us get a report - all colors for all sizes.
+        
+        
+   -- EXERCISE:
+   -- Do a cross join between shippers and products
+   -- using the implicit syntax
+   -- using the Explicit syntax
+   
+   -- IMPLICIT SYNTAX
+(SELECT 
+sh.name AS shipper,
+p.name AS product
+    FROM shippers sh, products p);  
+    
+    -- EXPLICI SYNTAX
+   (
+   SELECT 
+   sh.name AS shipper,
+   p.name AS product
+   FROM shippers sh
+   CROSS JOIN products p
+   ORDER BY shipper
+   );
+        
+        
+    -- 23	** NEW TOPIC: UNIONS:    
+    
+    -- Just like different variants of 'JOIN' clause can help you connect different columns through multiple tables.
+    -- Similarly, UNIONs' can help you connect different 'rows' from multiple queries/ different tables. 
+    -- UNION can help us combine records from multiple queries. In more simpler terms, 'UNION' helps you to combine results from 2 different queries.
+    
+    -- -- A string value i.e. 'Active'. This vale should appear against all records which have date after "2019-01-01". all the records qwwith previous date stamp should have 'Archived' against them in the column - "status"
+    
+    -- NOTE: 
+    -- 1. When using 'UNION' clause, make sure that the no. of specific coulumns SELECTED should be the same for both the 'SELECT' statements. ELSe, the SQL gives an error... ERROR because, SQL would not know how to combine the different number of columns.
+    -- 2. The colunmn header would be the default header name of the first queried column/s
+    -- Example: These 2 queries are from the same table
+    (
+    SELECT 
+    order_id,
+    order_date,
+    "ACTIVE" AS status			
+    FROM orders o
+    WHERE order_date >= "2019-01-01"
+    UNION										-- 'UNION' clause combines the 2 queries together     
+    SELECT 
+    order_id,
+    order_date,
+    "ARCHVED" AS status			
+    FROM orders o
+    WHERE order_date < "2019-01-01"
+    );
+    
+    
+        -- Example: These 2 queries are from different tables:
+
+    -- (SELECT  first_name					-- ALso, as observed before, the no. of columns mentioned in the 2 'SELECT' statements is same.
+--     FROM customers c
+--     UNION
+--     SELECT name 
+--     FROM shippers sh);
+    
+    
+    -- EXERCISE:
+    
+    -- Write a query to produce the result : customer_id; first_name; points; type (refer to type details below)
+    -- The 'type' column conditions: if points=<2000 = Bronze; if points>2000 AND points<3000 = Silver; If points =>3000 = GOLD
+    -- Sort the result by the first_name
+    
+    (SELECT 
+    c.customer_id,
+    c.first_name,
+    c.last_name,
+    "Bronze" AS type
+    FROM customers c
+    WHERE points <= 2000
+    UNION
+    SELECT 
+    c.customer_id,
+    c.first_name,
+    c.last_name,
+    "Silver" AS type
+    FROM customers c
+    WHERE points >2000
+    AND points <= 3000
+    UNION
+    SELECT 
+    c.customer_id,
+    c.first_name,
+    c.last_name,
+    "Gold" AS type
+    FROM customers c
+    WHERE points>3000
+    ORDER BY first_name);
+    
+    
