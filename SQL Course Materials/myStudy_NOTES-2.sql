@@ -5,6 +5,19 @@ USE sql_store;  -- Choosing the dataBase to work with
 
 -- ************		Module 3: Inserting, Updating and Deleting Data	(within rows )*****************
 
+-- TOPICS:
+		-- 24.	Column Attributes
+        -- 25.	Inserting a row
+        -- 26.	Inserting Multiple rows
+        -- 27.	Inserting Hierarchical rows
+        -- 28. 	Creating a copy of a table
+        -- 29.	Updating a Single row
+        -- 30.	updating Multiple rows
+        -- 31.	Using subqueries in updates
+        -- 32.	Deleting Rows 
+        -- 33.	Restoring the databases
+        
+
 -- 24 ** NEW TOPIC: Column Attributes
 
 -- PN: Primary key: Unique attribute that gives a unique identity to each row aka record
@@ -77,8 +90,8 @@ FROM shippers;
  
  -- i.e. inserting a row in one parent table and getting it updated automatically synced in the child tables
 
--- Till now,we have learnt how to insert data into single table, But this module will teach us how to isert a data piece in multiple tables
--- 1st step: 	Determine parent-child relationship 
+-- Till now,we have learnt how to insert data into single table, But this module will teach us how to insert a data piece in multiple tables (parent/ child tables)
+-- 1 step: 		Determine parent-child relationship 
 -- 2			Insert INTO 'parent' table
 -- 3			Use inbuilt function 'last_insert_id()' to auto track the order_id that would've been generated the moment, a new record was added in the parent table. The fubction in a way acts like a variable that holds the value of the last generated ID which eventually then can be used further in the child table. 
 
@@ -141,9 +154,128 @@ VALUES	(last_insert_id(),2,34,2.22),
     );
     
     
-     -- 29 ** NEW TOPIC: UPDATING A SINGLE ROW :
+-- 29 ** NEW TOPIC: UPDATING A SINGLE ROW :
+     
      -- Update statement followed by a table name
      -- SET new values
      -- WHERE conditions
      
+     UPDATE invoices
+     SET payment_total = 10, payment_date = '2021-01-01'
+     WHERE invoice_id =1;
      
+     
+     -- The above can also be reversed by :
+     
+     UPDATE invoices
+     SET payment_total = 0, payment_date = NULL
+     WHERE invoice_id = 1;
+
+-- SET statement also accepts mathematical expressions...e.g. 
+
+UPDATE invoices
+SET payment_total = invoice_total /2, payment_date = due_date -- mathematical expression for payment_total and variable date assignment
+where invoice_id = 3;
+
+
+
+-- 30 ** NEW TOPIC: UPDATING MULTIPLE ROWs :
+
+-- All structure remains the same, just as above. BUT the element attribute in the 'WHERE' condition has to be more generic..so that more than one row qualifies..so pick a condition, basically which represents the entire category of eligible targetted items.
+
+
+UPDATE invoices
+SET payment_total = invoice_total * 0.5,
+	payment_date = due_date
+    where client_id = 3	;			-- If we'll want to update all records in the table, simply leave this statement out
+
+
+-- EXERCISE:
+-- Write a SQL statement to:
+		-- give any customers born before 1990
+        -- 50 extra points
+        
+        USE sql_store;
+        
+        UPDATE customers
+        SET points = points + 50
+        WHERE birth_date < '1990-01-01' ;
+	
+-- 31 ** NEW TOPIC: USING SUBQUERIES IN UPDATES :		The Beauty of Relational databases - 
+
+-- Update without Joining tables. i.e. update a table with conditions applied on another table
+
+USE sql_invoicing;
+
+UPDATE invoices
+SET payment_total = invoice_total * 0.5, 
+	payment_date = '1982-08-16'
+    
+    WHERE client_id = 
+			(
+            SELECT client_id
+            from clients
+            WHERE name  = 'yadel'
+            );
+            
+            
+-- Another Example:            			-- OBSERVE the use of 'IN' in 'WHERE' conditions
+UPDATE invoices
+SET payment_total = invoice_total * 10,
+	payment_date = '2017-03-14'
+    
+    WHERE client_id in (
+		SELECT client_id
+		from clients
+		WHERE state IN ('CA','NY'));
+
+-- Exercise : 
+
+-- USe sql_store database
+-- from orders table
+-- Write a comment 'GOLD CUSTOMERS ' for customers who have placed an order and who have more than 3k Points
+
+USE sql_store;
+
+UPDATE orders
+SET comments = 'GOLD CUSTOMERS'
+WHERE customer_id in( 				-- Since there are multiple rows that will be selected i.e. in this case 3, hence using 'in'
+		SELECT customer_id
+		from customers
+		WHERE points > 3000
+);
+
+-- 32 ** NEW TOPIC: DELETING ROWs
+
+-- Use 'DELETE FROM <table>' statements to delete ALL the records from <table>...so be very carefull.
+-- Optionally, you can use 'where' statement to state a condition so that only those records are deleted which qualify for this condition
+
+-- E.g : Delete records with invoice_id = 1
+DELETE FROM invoices
+WHERE invoice_id = 1;  
+
+
+-- We can also use a subQuery in above
+-- E.g.: delete all records from table 'invoices' for clients named myworks
+DELETE FROM invoices
+WHERE client_id = 
+		(
+        SELECT client_id					-- subquery being used to find client named 'Myworks'
+		FROM clients
+		WHERE name = 'yadel'
+        );
+        
+        -- ERRORS : 'Operand should contain 1 column(s)' : simply means that your subquery results in multiple columns, which should specifically should state 1. so instead of SELECT *, do SELECT client_id    
+
+-- 32 ** NEW TOPIC: RESTORING THE DATABASES :	DISCLAIMER : This will only work for this course
+
+-- This is used to restore databases to thier original form with the original data. Normally, You may want to do this when you would have deleted, added or updated data and would want the original databases back.
+
+-- open the create-databases.sql script and execute it
+-- then refresh the left side folder panel..   and that's it.
+
+
+
+ -- ************		Module 4 : SUMMARIZNG Data		*****************
+ 
+ 
