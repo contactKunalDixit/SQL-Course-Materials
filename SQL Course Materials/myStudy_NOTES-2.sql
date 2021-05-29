@@ -278,4 +278,130 @@ WHERE client_id =
 
  -- ************		Module 4 : SUMMARIZNG Data		*****************
  
+-- This module tells us how to summarize data so it gives a more wholistic picture in general of the data:
+-- Often, business would want to know how the departments/ UNITS are performing in general..and  summarzing data techniques can help us have that picture.
+
  
+-- TOPICS:
+		-- 33.	Aggregate Functions
+
+        
+        
+        -- 33 ** NEW TOPIC:	Aggregate Functions:
+        
+        
+-- This module tells us how to summarize data so it gives a more wholistic picture in general of the data:
+-- Aggregate functions are a set of built-in functions which help us aggregate individual values to give a wholistic value representing the entire data set.
+-- Some of the functions are:
+
+-- MAX()
+-- MIN()
+-- SUM()
+-- AVG()
+-- COUNT()
+
+-- DEMO:
+
+USE sql_invoicing;
+
+
+
+SELECT 	MAX(invoice_total) AS highest,
+		MIN(invoice_total) AS lowest,
+        SUM(invoice_total) AS sum_invoice_total,
+        AVG(invoice_total),
+        count(invoice_total) AS 'No of invoices',
+        MAX(payment_date) AS latest_Pay_dates,			-- -- MAX(date):	gives us the latest/ recent date 
+        count(payment_date) AS count_payment,
+        count(*) AS total_entries,						-- -- Count(*) gives us the total entries including 'NULL' values. Otherwise, normally count() would only include 'NOT NULL' values.
+		count(client_id) AS client_count,				-- COUNT(client_id) would even include duplicate values as it is quoting the number of total items in the client_id column. 
+        count(DISTINCT client_id) AS unique_count,		-- BUT if you'd like to count 'DISTINCT' aka UNIQUE values. SELECT statement with 'DISTINCT' clause elimainates the repetative appearance of the same data.
+        SUM(invoice_total *1.1)							-- -- BODMAS applies i.e. every entry gets multiplied with 1.1 and then after bracket values calculated, SQL goes for the SUM.
+        
+FROM invoices 
+WHERE invoice_date >  '2019-07-01'	;					-- Adding a FILTER through 'WHERE' would apply the functions only on the elements that qualified for the conditions. In this example now. the result shows up for the later half of year 2019.
+
+-- 
+
+-- The above functions can also be applied to 'DATES' and 'STRING' values.
+-- NOTE: THESE FUNCTIONS IGORE THE NULL VALUE. So if there's a null value in these columns, they will be ignored
+-- -- Count(*) gives us the total entries including 'NULL' values. Otherwise, normally count() would only include 'NOT NULL' values.
+
+        -- EXERCISE:
+        -- refer invoice table
+        -- 1st column header should be date_range and should have 3 entries:First half of 2019, Second half of 2019, Total
+        -- 2nd column named total_sales corresponding to 'First half of 2019', 'Second half of 2019' and the total_sales sum corresponding to Total
+        -- 3rd column should be named 'total_payment' corresponding to the respective time periods
+        -- 4th column should be what_we_expect which is the difference for invoice amount generated and payment recieved in the respective time periods.
+        
+        
+        
+        SELECT 
+			'First half of 2019' AS date_range,
+			 SUM(invoice_total) AS total_sales,
+			 SUM(payment_total) AS total_payment,
+			 SUM(invoice_total - payment_total) AS What_we_expect
+		FROM invoices
+        WHERE due_date 
+			BETWEEN '2019-01-01' AND '2019-06-30'
+UNION
+        SELECT 
+			'Second half of 2019' AS date_range,
+			 SUM(invoice_total) AS total_sales,
+			 SUM(payment_total) AS total_payment,
+			 SUM(invoice_total - payment_total) AS What_we_expect
+		FROM invoices
+        WHERE due_date 
+			BETWEEN '2019-07-01' AND '2019-12-31'
+UNION
+		SELECT 
+			'Total' AS date_range,
+			 SUM(invoice_total) AS total_sales,
+			 SUM(payment_total) AS total_payments, 
+			 SUM(invoice_total - payment_total) AS What_we_expect
+		FROM invoices
+        WHERE due_date 
+			BETWEEN '2019-01-01' AND '2019-12-31';
+            
+            
+            
+               -- 34 ** NEW TOPIC:	The GROUP BY clause
+	
+    -- The GROUP BY clause helps with grouping the data
+    -- If you'd like to see the sum of invoice amounts generated for each client. i.e sorted by client_id
+    
+    USE sql_invoicing;
+    SELECT 
+		client_id,
+		SUM(invoice_total) as Client_amount
+    FROM invoices 
+    WHERE
+		invoice_date >= '2019-07-01'
+    GROUP BY client_id    				-- The clause 'GROUP BY' allows the system to group together the data based on the arguement
+    ORDER BY Client_amount DESC;
+    
+    -- NOTE: Always remember the sequence : FROM; WHERE(optional); GROUP BY; ORDER BY(optional)
+    
+    -- ANother Example:
+    -- show the sales figures state and city wise post joining the clients table with invoices
+    
+    SELECT 
+			c.City,
+			c.State,
+			SUM(invoice_total) as invoice_total
+        FROM invoices i
+        JOIN clients c using (client_id)
+        GROUP BY state,city;
+        
+        -- EXERCISE:				REWORK ON THIS EXAMPLE
+        SELECT 
+			p.date,
+            p.payment_method,
+            pm.name,
+            SUM(p.amount)
+		FROM payments AS p
+           JOIN payment_methods AS pm 
+			ON p.payment_method = pm.payment_method_id
+		GROUP BY(date,name)
+           
+        

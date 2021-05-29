@@ -160,6 +160,7 @@ WHERE
      
     
     -- 6 ** NEW TOPIC  : The 'LIKE' Operator
+    
     -- Retirve rows aka records that match specific string patterns.
     -- WHERE last_name LIKE 'b%' 	- means last names that start with letter 'b' and '%' means any number of characters.
     -- b% - means any no. of characters string after 'b'
@@ -209,8 +210,8 @@ WHERE
     -- The REGEXP has certain charaters that we can make use of to make our search more precise. The same options are not available in the 'like' operator
    
    -- special REGEXP Characters
-    -- ^ carrot character - indicate the Begining of the string. e.g. '^field' would mean that the last _name should start with string pattern 'field' 
-    -- $ dollar character - indicate the END of the string. e.g. 'field$' would bring back the results where last_name ends with 'field'
+    -- ^ carrot character - indicate the Begining of the string. e.g. '^field' would mean that the last _name should start with string pattern 'field', followed by other letters. 
+    -- $ dollar character - indicate the END of the string. e.g. 'field$' would bring back the results where last_name ends with 'field'.
     -- | pipe character - acts as logical 'OR'. e.g. WHERE last_name REGEXP 'field|mac|rose' means search out results which have either 'field' OR 'Mac' OR 'rose' in the last name.
     -- Thus you can have WHERE last_name REGEXP '^field|mac$|rose' means: those last_names, which have either field at the start, OR are ending with Mac at the end, OR have 'rose' anywhere appearing. 
     -- WHERE REGEXP '[gem]e' would bring all the last_names which have either ge, or ee or me appearing anywhere within
@@ -566,11 +567,11 @@ ON p.product_id = oi.product_id);
  c.customer_id,
  c.first_name,
  o.shipper_id,
- sh.name as shipper
+ sh.name AS shipper
  FROM customers c
  LEFT JOIN orders o
  ON c.customer_id = o.customer_id
- LEFT JOIN shippers as sh
+ LEFT JOIN shippers AS sh
  on o.shipper_id = sh.shipper_id
  );
  
@@ -596,7 +597,7 @@ FROM
     ON ord.status = ordsta.order_status_id
     order by ordsta.name);
  
--- 19	** NEW TOPIC: SELF OUTER JOINS
+-- 19	** NEW TOPIC: SELF outer JOINS
 
 USE sql_hr;
 (SELECT 
